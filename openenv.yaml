@@ -1,0 +1,132 @@
+name: "assignment-planner"
+version: "0.1.0"
+description: >
+  Assignment & bug-fix planner for students and junior developers.
+  An AI agent decides which coding task to work on, how many hours to spend,
+  and whether to ask a mentor for help — across multiple days — while
+  avoiding burnout and missed deadlines.
+
+# ── Model references ────────────────────────────────────────────────────────
+# These point to the Pydantic classes used by the environment.
+# Agents can introspect the JSON Schema from GET /openapi.json.
+action_type: "assignment_planner.models.Action"
+observation_type: "assignment_planner.models.Observation"
+state_type: "assignment_planner.models.State"
+
+# ── HTTP endpoints ───────────────────────────────────────────────────────────
+endpoints:
+  reset:
+    method: POST
+    path: /reset
+    description: >
+      Initialise or re-initialise the environment.
+      Pass `task_id` as a query parameter (e.g. ?task_id=easy_1).
+    returns: observation_type
+
+  step:
+    method: POST
+    path: /step
+    description: >
+      Advance the environment by one agent action.
+      Body must be a JSON object matching `action_type`.
+    returns:
+      observation: observation_type
+      reward: float
+      done: bool
+      info: object
+
+  state:
+    method: GET
+    path: /state
+    description: >
+      Retrieve the full internal state without advancing the episode.
+      Useful for trajectory recording and debugging.
+    returns: state_type
+
+# ── Task catalogue ───────────────────────────────────────────────────────────
+# Each entry defines one scenario group.
+# The `id` field corresponds to the `task_id` accepted by POST /reset
+# (use the suffixed forms easy_1, medium_1, hard_1 in actual API calls).
+tasks:
+  - id: "easy_1"
+    group: "easy"
+    description: >
+      Two tasks: one high-severity login bug and one small dashboard feature.
+      Total work (6 h) fits comfortably within the 3-day, 6 h/day capacity.
+      Introduces basic task prioritisation.
+    difficulty: "easy"
+    max_days: 3
+    daily_capacity_hours: 6
+    total_estimated_hours: 6
+
+  - id: "medium_1"
+    group: "medium"
+    description: >
+      Three tasks: a critical API bug with a tight 2-day deadline, a profile
+      feature, and a low-priority refactor.  Total work (11 h) fits within
+      the 4-day capacity but the bug must be addressed first.
+      Tests time-aware prioritisation and the ask-for-help heuristic.
+    difficulty: "medium"
+    max_days: 4
+    daily_capacity_hours: 6
+    total_estimated_hours: 11
+
+  - id: "hard_1"
+    group: "hard"
+    description: >
+      Five tasks including two critical bugs due on days 1 and 2.
+      Total work (21 h) exceeds the 3-day × 6 h/day = 18 h capacity,
+      forcing the agent to triage and accept some tasks will be missed.
+      Tests burnout avoidance and optimal deadline-driven scheduling.
+    difficulty: "hard"
+    max_days: 3
+    daily_capacity_hours: 6
+    total_estimated_hours: 21
+
+# ── Reward design ────────────────────────────────────────────────────────────
+reward:
+  type: "dense-shaped"
+  range: "unbounded (negative to positive)"
+  terminal_bonus: true
+  description: >
+    Step rewards are shaped to encourage working on high-severity bugs and
+    near-deadline tasks while penalising burnout, task-switching, and low-
+    priority work when urgent items remain open.
+    Final 0–1 episode scores are computed by the separate grader functions
+    in graders.py (grade_easy / grade_medium / grade_hard).
+
+# ── Graders ──────────────────────────────────────────────────────────────────
+graders:
+  - task_group: "easy"
+    function: "assignment_planner.graders.grade_easy"
+    alpha: 0.70   # weight: high-severity bug completion
+    beta: 0.30    # weight: feature completion
+    gamma: 0.05   # penalty: overloaded days
+    delta: 0.10   # penalty: critical bug ignored until last day
+
+  - task_group: "medium"
+    function: "assignment_planner.graders.grade_medium"
+    alpha: 0.55
+    beta: 0.25
+    gamma: 0.20
+    delta: 0.20
+    bonus: 0.10   # for balanced bug + feature work
+
+  - task_group: "hard"
+    function: "assignment_planner.graders.grade_hard"
+    alpha: 0.60
+    beta: 0.15
+    gamma: 0.30
+    delta: 0.25
+    bonus: 0.15   # for fully burnout-free execution
+
+# ── Deployment ───────────────────────────────────────────────────────────────
+deployment:
+  platform: "huggingface-spaces"
+  backend: "docker"
+  tags:
+    - openenv
+    - agent-environment
+    - task-planning
+  port: 7860
+  base_image: "python:3.11-slim"
