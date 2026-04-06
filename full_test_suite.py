@@ -327,7 +327,7 @@ sys.modules.setdefault("assignment_planner.environment", _e)
 import src.envs.assignment_planner.graders as _gr
 sys.modules.setdefault("assignment_planner.graders", _gr)
 
-sys.path.insert(0, os.path.join(_ROOT, "src", "envs", "assignment_planner", "server"))
+sys.path.insert(0, os.path.join(_ROOT, "server"))
 import app as server_app
 import uvicorn
 
@@ -443,7 +443,7 @@ expect_equal(len(end_lines),  3, "[END] lines count = 3")
 # Validate [END] scores are in [0,1]
 for line in end_lines:
     try:
-        score_str = line.split("score=")[1].strip()
+        score_str = line.split("score=")[1].split(" ")[0].strip()
         score_val = float(score_str)
         expect_true(0.0 <= score_val <= 1.0,
                     f"[END] score in [0,1]: {score_val:.4f}")
@@ -453,7 +453,7 @@ for line in end_lines:
 # Validate [STEP] lines parse correctly
 for line in step_lines[:3]:
     try:
-        parts = dict(p.split("=", 1) for p in line[len("[STEP] "):].split(", ", 4))
+        parts = dict(p.split("=", 1) for p in line[len("[STEP] "):].split(" "))
         _ = int(parts["step"])
         _ = json.loads(parts["action"])
         _ = float(parts["reward"])
@@ -486,3 +486,8 @@ print(f"\n  Mean heuristic score : easy={s_easy:.4f}  medium={s_medium:.4f}  har
 print(f"{BOLD}{'='*60}{RESET}\n")
 
 sys.exit(0 if failed == 0 else 1)
+
+
+# So what we have done ghere is that how we got here so that's the main catch here , so what we have got here is that we have  have completed the pydantic modules but still we got a do a lot of things , so let's start with the task config module 
+# in config modules we started this with a lot of things we  still got a lot of things which we still need to figure out but yeah but we still have got a long way but yeah after all it dosent matter
+# the HTTp server has still got several probkems of its own but it mainly could start on its own , but still we can figure out a lot of things

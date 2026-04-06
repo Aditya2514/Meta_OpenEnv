@@ -85,17 +85,9 @@ logger = logging.getLogger("inference")
 # ---------------------------------------------------------------------------
 # Configuration (from environment variables)
 # ---------------------------------------------------------------------------
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
-
-API_BASE_URL: str = os.getenv("API_BASE_URL", "https://apurva-22-meta-openenv.hf.space").rstrip("/")
+API_BASE_URL: str = os.getenv("API_BASE_URL", "http://localhost:7860").rstrip("/")
 MODEL_NAME: str = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
-HF_TOKEN: str = os.getenv("HF_TOKEN")
-if not HF_TOKEN:
-    HF_TOKEN = ""
+HF_TOKEN: str = os.getenv("HF_TOKEN", "")
 USE_LOCAL_ENV: bool = os.getenv("USE_LOCAL_ENV", "0") == "1"
 
 # LLM call settings
@@ -138,8 +130,6 @@ def _http(
     headers: Dict[str, str] = {"Accept": "application/json"}
     if data:
         headers["Content-Type"] = "application/json"
-    if HF_TOKEN and "hf.space" in url:
-        headers["Authorization"] = f"Bearer {HF_TOKEN}"
 
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
@@ -453,17 +443,17 @@ def log_step(
     )
     print(
         f"[STEP] step={step_num} "
-        f"action={action_json} "
         f"reward={round(reward, 4)} "
+        f"action={action_json} "
         f"done={done} "
         f"info={info_json}",
         flush=True,
     )
 
 
-def log_end(task_id: str, score: float, step_num: int) -> None:
+def log_end(task_id: str, score: float, steps: int) -> None:
     """Emit the [END] line."""
-    print(f"[END] task={task_id} score={round(score, 4)} steps={step_num}", flush=True)
+    print(f"[END] task={task_id} score={round(score, 4)} steps={steps}", flush=True)
 
 
 # ===========================================================================
