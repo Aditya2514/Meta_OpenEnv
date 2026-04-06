@@ -85,9 +85,17 @@ logger = logging.getLogger("inference")
 # ---------------------------------------------------------------------------
 # Configuration (from environment variables)
 # ---------------------------------------------------------------------------
-API_BASE_URL: str = os.getenv("API_BASE_URL", "http://localhost:7860").rstrip("/")
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+API_BASE_URL: str = os.getenv("API_BASE_URL", "https://apurva-22-meta-openenv.hf.space").rstrip("/")
 MODEL_NAME: str = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
-HF_TOKEN: str = os.getenv("HF_TOKEN", "")
+HF_TOKEN: str = os.getenv("HF_TOKEN")
+if not HF_TOKEN:
+    HF_TOKEN = ""
 USE_LOCAL_ENV: bool = os.getenv("USE_LOCAL_ENV", "0") == "1"
 
 # LLM call settings
@@ -130,6 +138,8 @@ def _http(
     headers: Dict[str, str] = {"Accept": "application/json"}
     if data:
         headers["Content-Type"] = "application/json"
+    if HF_TOKEN and "hf.space" in url:
+        headers["Authorization"] = f"Bearer {HF_TOKEN}"
 
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
