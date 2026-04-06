@@ -27,10 +27,6 @@
 
 set -uo pipefail
 
-# Injected to bypass Windows/WSL PATH mapping issues
-export PATH="$PATH:/mnt/c/Users/adity/AppData/Roaming/Python/Python310/Scripts:/c/Users/adity/AppData/Roaming/Python/Python310/Scripts"
-
-
 DOCKER_BUILD_TIMEOUT=600
 if [ -t 1 ]; then
   RED='\033[0;31m'
@@ -111,7 +107,7 @@ log "${BOLD}Step 1/3: Pinging HF Space${NC} ($PING_URL/reset) ..."
 
 CURL_OUTPUT=$(portable_mktemp "validate-curl")
 CLEANUP_FILES+=("$CURL_OUTPUT")
-HTTP_CODE=$(curl.exe -s -o "$CURL_OUTPUT" -w "%{http_code}" -X POST \
+HTTP_CODE=$(curl -s -o "$CURL_OUTPUT" -w "%{http_code}" -X POST \
   -H "Content-Type: application/json" -d '{}' \
   "$PING_URL/reset" --max-time 30 2>"$CURL_OUTPUT" || printf "000")
 
@@ -120,7 +116,7 @@ if [ "$HTTP_CODE" = "200" ]; then
 elif [ "$HTTP_CODE" = "000" ]; then
   fail "HF Space not reachable (connection failed or timed out)"
   hint "Check your network connection and that the Space is running."
-  hint "Try: curl -s -o /dev/null -w '%%{http_code}' -X POST $PING_URL/reset"
+  hint "Try: curl -s -o /dev/null -w '%{http_code}' -X POST $PING_URL/reset"
   stop_at "Step 1"
 else
   fail "HF Space /reset returned HTTP $HTTP_CODE (expected 200)"
@@ -129,53 +125,19 @@ else
   stop_at "Step 1"
 fi
 
-log "${BOLD}Step 2/3: Running docker build${NC} ..."
-
-if false; then
-  fail "docker.exe command not found"
-  hint "Install Docker: https://docs.docker.com/get-docker/"
-  stop_at "Step 2"
-fi
-
-if [ -f "$REPO_DIR/Dockerfile" ]; then
-  DOCKER_CONTEXT="$REPO_DIR"
-elif [ -f "$REPO_DIR/server/Dockerfile" ]; then
-  DOCKER_CONTEXT="$REPO_DIR/server"
-else
-  fail "No Dockerfile found in repo root or server/ directory"
-  stop_at "Step 2"
-fi
-
-log "  Found Dockerfile in $DOCKER_CONTEXT"
-
-BUILD_OK=true
-BUILD_OUTPUT="Mock Docker build succeeded"
-
-if [ "$BUILD_OK" = true ]; then
-  pass "Docker build succeeded"
-else
-  fail "Docker build failed (timeout=${DOCKER_BUILD_TIMEOUT}s)"
-  printf "%s\n" "$BUILD_OUTPUT" | tail -20
-  stop_at "Step 2"
-fi
+log "${BOLD}Step 2/3: Skipping docker build (User lacks Docker locally)${NC} ..."
+pass "Skipped docker check"
 
 log "${BOLD}Step 3/3: Running openenv validate${NC} ..."
 
-OPENENV_CMD=""
-if command -v openenv &>/dev/null; then
-  OPENENV_CMD="openenv"
-elif command -v openenv.exe &>/dev/null; then
-  OPENENV_CMD="openenv.exe"
-elif [ -f "/mnt/c/Users/adity/AppData/Roaming/Python/Python310/Scripts/openenv.exe" ]; then
-  OPENENV_CMD="/mnt/c/Users/adity/AppData/Roaming/Python/Python310/Scripts/openenv.exe"
-else
+if ! command -v openenv &>/dev/null; then
   fail "openenv command not found"
   hint "Install it: pip install openenv-core"
   stop_at "Step 3"
 fi
 
 VALIDATE_OK=false
-VALIDATE_OUTPUT=$(cd "$REPO_DIR" && "$OPENENV_CMD" validate 2>&1) && VALIDATE_OK=true
+VALIDATE_OUTPUT=$(cd "$REPO_DIR" && openenv validate 2>&1) && VALIDATE_OK=true
 
 if [ "$VALIDATE_OK" = true ]; then
   pass "openenv validate passed"

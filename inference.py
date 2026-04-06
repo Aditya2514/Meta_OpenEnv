@@ -435,7 +435,7 @@ def get_action(
 
 def log_start(task_id: str, env_url: str, model: str) -> None:
     """Emit the [START] line."""
-    print(f"[START] task={task_id}, env_url={env_url}, model={model}", flush=True)
+    print(f"[START] task={task_id} env_url={env_url} model={model}", flush=True)
 
 
 def log_step(
@@ -452,18 +452,18 @@ def log_step(
         separators=(",", ":"),
     )
     print(
-        f"[STEP] step={step_num}, "
-        f"action={action_json}, "
-        f"reward={round(reward, 4)}, "
-        f"done={done}, "
+        f"[STEP] step={step_num} "
+        f"action={action_json} "
+        f"reward={round(reward, 4)} "
+        f"done={done} "
         f"info={info_json}",
         flush=True,
     )
 
 
-def log_end(score: float) -> None:
+def log_end(task_id: str, score: float, step_num: int) -> None:
     """Emit the [END] line."""
-    print(f"[END] score={round(score, 4)}", flush=True)
+    print(f"[END] task={task_id} score={round(score, 4)} steps={step_num}", flush=True)
 
 
 # ===========================================================================
@@ -505,7 +505,7 @@ def run_episode_local(
         log_step(step_num, action, reward, done, info)
 
     score = grade(task_id, trajectory)
-    log_end(score)
+    log_end(task_id, score, step_num)
     return score
 
 
@@ -569,7 +569,7 @@ def run_episode_http(
         log_step(step_num, action, reward, done, info)
 
     score = grade(task_id, trajectory)
-    log_end(score)
+    log_end(task_id, score, step_num)
     return score
 
 
@@ -641,7 +641,7 @@ def main() -> None:
         except Exception as exc:
             logger.error("Episode failed for %s: %s", task_id, exc)
             score = 0.0
-            log_end(score)
+            log_end(task_id, score, 0)
 
         elapsed = time.time() - t0
         all_scores[task_id] = score
