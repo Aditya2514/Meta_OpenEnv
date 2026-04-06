@@ -1,3 +1,12 @@
+---
+title: Assignment Planner Environment
+emoji: 🏢
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # Assignment & Bug-Fix Planner Agent for Students and Junior Developers
 
 > An **OpenEnv-compliant AI-agent task** in which a student or junior developer
