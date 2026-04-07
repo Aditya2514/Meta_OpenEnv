@@ -429,9 +429,11 @@ def get_action(
 # Structured logging
 # ===========================================================================
 
-def log_start(task_id: str) -> None:
-    """Emit the [START] line."""
-    print(f"[START] task={task_id}", flush=True)
+def log_start(task_id: str, env_url: str, model: str) -> None:
+    """Emit the mandatory [START] line."""
+    # Use 'assignment-planner' as the default benchmark name if env_url is not set
+    benchmark = "assignment-planner"
+    print(f"[START] task={task_id} env={benchmark} model={model}", flush=True)
 
 
 def log_step(
@@ -439,27 +441,27 @@ def log_step(
     reward: float,
     done: bool,
     action: Action,
-    info: Dict,
 ) -> None:
-    """Emit one [STEP] line."""
+    """Emit the mandatory [STEP] line."""
     action_json = json.dumps(action.model_dump(), separators=(",", ":"))
-    info_json = json.dumps(
-        {k: v for k, v in info.items()},
-        separators=(",", ":"),
-    )
+    done_val = str(done).lower()
+    # Format according to sample: step, action, reward (2dp), done (lower), error
     print(
-        f"[STEP] step={step_num} "
-        f"reward={round(reward, 4)} "
-        f"done={done} "
-        f"action={action_json} "
-        f"info={info_json}",
+        f"[STEP] step={step_num} action={action_json} "
+        f"reward={reward:.2f} done={done_val} error=null",
         flush=True,
     )
 
 
-def log_end(task_id: str, score: float, steps: int) -> None:
-    """Emit the [END] line."""
-    print(f"[END] task={task_id} score={round(score, 4)} steps={steps}", flush=True)
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
+    """Emit the mandatory [END] line."""
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    success_val = str(success).lower()
+    print(
+        f"[END] success={success_val} steps={steps} "
+        f"score={score:.3f} rewards={rewards_str}",
+        flush=True,
+    )
 
 
 # ===========================================================================
@@ -482,11 +484,12 @@ def run_episode_local(
     -------
     float : grader score in [0.0, 1.0]
     """
-    log_start(task_id)
+    log_start(task_id, env_url, MODEL_NAME)
 
     env = AssignmentPlannerEnv(task_id=task_id)
     obs = observation_from_dict(env.reset().model_dump())
     trajectory: List[State] = [env.state()]
+    rewards_list: List[float] = []
 
     step_num = 0
     done = False
@@ -496,12 +499,14 @@ def run_episode_local(
         raw_obs, reward, done, info = env.step(action)
         obs = observation_from_dict(raw_obs.model_dump())
         trajectory.append(env.state())
+        rewards_list.append(reward)
 
         step_num += 1
-        log_step(step_num, reward, done, action, info)
+        log_step(step_num, reward, done, action)
 
     score = grade(task_id, trajectory)
-    log_end(task_id, score, step_num)
+    success = score >= 0.1
+    log_end(success, step_num, score, rewards_list)
     return score
 
 
@@ -522,14 +527,15 @@ def run_episode_http(
     -------
     float : grader score in [0.0, 1.0]
     """
-    log_start(task_id)
+
+    log_start(task_id, env_url, MODEL_NAME)
 
     # Reset
     try:
         raw_obs_dict = http_reset(task_id)
     except RuntimeError as exc:
         logger.error("Failed to reset via HTTP: %s", exc)
-        log_end(task_id, 0.0, 0)
+        log_end(False, 0, 0.0, [])
         raise
 
     obs = observation_from_dict(raw_obs_dict)
@@ -538,6 +544,7 @@ def run_episode_http(
     shadow_env = AssignmentPlannerEnv(task_id=task_id)
     shadow_env.reset()
     trajectory: List[State] = [shadow_env.state()]
+    rewards_list: List[float] = []
 
     step_num = 0
     done = False
@@ -554,6 +561,7 @@ def run_episode_http(
             raw_obs_dict = raw_obs_pydantic.model_dump()
 
         obs = observation_from_dict(raw_obs_dict)
+        rewards_list.append(reward)
 
         # Mirror the action in the shadow env to keep trajectory in sync
         try:
@@ -563,10 +571,11 @@ def run_episode_http(
         trajectory.append(shadow_env.state())
 
         step_num += 1
-        log_step(step_num, reward, done, action, info)
+        log_step(step_num, reward, done, action)
 
     score = grade(task_id, trajectory)
-    log_end(task_id, score, step_num)
+    success = score >= 0.1
+    log_end(success, step_num, score, rewards_list)
     return score
 
 
@@ -668,7 +677,7 @@ def main() -> None:
         except Exception as exc:
             logger.error("Episode failed for %s: %s", task_id, exc)
             score = 0.0
-            log_end(task_id, score, 0)
+            log_end(success=False, steps=0, score=score, rewards=[])
 
         elapsed = time.time() - t0
         all_scores[task_id] = score
