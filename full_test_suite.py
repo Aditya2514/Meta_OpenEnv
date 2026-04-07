@@ -441,22 +441,33 @@ expect_equal(len(start_lines), 3, "[START] lines count = 3")
 expect_true(len(step_lines) >= 3, f"[STEP] lines >= 3 (got {len(step_lines)})")
 expect_equal(len(end_lines),  3, "[END] lines count = 3")
 
-# Validate [END] scores are in [0,1]
+# Validate [START] lines
+for line in start_lines:
+    expect_true("env=" in line and "model=" in line, f"[START] has env and model: {line}")
+
+# Validate [END] scores and success
 for line in end_lines:
     try:
-        # Expected: [END] task=easy_1 score=0.95 steps=1
-        if "score=" in line:
-            score_part = line.split("score=")[1].split(" ")[0]
-            score_val = float(score_part)
-            expect_true(0.0 <= score_val <= 1.0,
-                        f"[END] score in [0,1]: {score_val:.4f}")
+        # Expected: [END] success=true steps=3 score=1.000 rewards=0.00,0.00,1.00
+        # Use split() to get all k=v tokens, filtering out empty strings from extra spaces
+        tokens = [t for t in line[len("[END] "):].split(" ") if t.strip()]
+        parts = {}
+        for t in tokens:
+            if "=" in t:
+                k, v = t.split("=", 1)
+                parts[k] = v
+        
+        score_val = float(parts["score"])
+        expect_true(0.0 <= score_val <= 1.0, f"[END] score in [0,1]: {score_val:.4f}")
+        expect_true(parts["success"] in ("true", "false"), f"success is lowercase: {parts['success']}")
+        expect_true("rewards" in parts, f"rewards field present in: {parts.keys()}")
     except Exception as ex:
-        fail(f"Could not parse score from: {line!r}", ex)
+        fail(f"Could not parse [END] line: {line!r}", ex)
 
 # Validate [STEP] lines parse correctly (space-separated)
 for line in step_lines[:3]:
     try:
-        # Expected: [STEP] step=1 reward=0.5 done=False action={...} info={...}
+        # Expected: [STEP] step=1 action={...} reward=0.50 done=false error=null
         content = line[len("[STEP] "):].strip()
         parts_list = content.split(" ")
         parts = {}
@@ -467,9 +478,9 @@ for line in step_lines[:3]:
         
         _ = int(parts["step"])
         _ = float(parts["reward"])
-        _ = parts["done"] in ("True", "False")
+        _ = parts["done"] in ("true", "false")
         _ = json.loads(parts["action"])
-        _ = json.loads(parts["info"])
+        expect_equal(parts["error"], "null", "error is null")
         ok(f"[STEP] line parses OK: step={parts['step']}")
     except Exception as ex:
         fail(f"[STEP] line parse failed: {line[:80]!r}", ex)
