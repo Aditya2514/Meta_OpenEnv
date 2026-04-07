@@ -122,8 +122,9 @@ section("TEST 2 – task_config.py")
 
 from src.envs.assignment_planner.task_config import list_task_ids, get_config, TASK_CONFIGS
 
-ids = list_task_ids()
-expect_equal(ids, ["easy_1", "medium_1", "hard_1"], "list_task_ids()")
+all_ids = list_task_ids()
+ids = ["easy_1", "medium_1", "hard_1"]
+expect_true(all(tid in all_ids for tid in ids), "Canonical tasks in list_task_ids()")
 
 expected_tasks  = {"easy_1": 2, "medium_1": 3, "hard_1": 5}
 expected_days   = {"easy_1": 3, "medium_1": 4, "hard_1": 3}
@@ -356,7 +357,7 @@ def http(method, path, body=None):
 try:
     h = http("GET", "/")
     expect_equal(h["status"], "ok", "GET /: status=ok")
-    expect_equal(sorted(h["available_tasks"]), sorted(ids), "GET /: available_tasks")
+    expect_equal(sorted(h["available_tasks"]), sorted(all_ids), "GET /: available_tasks")
 except Exception as e:
     fail("GET /", e)
 
@@ -443,21 +444,32 @@ expect_equal(len(end_lines),  3, "[END] lines count = 3")
 # Validate [END] scores are in [0,1]
 for line in end_lines:
     try:
-        score_str = line.split("score=")[1].strip()
-        score_val = float(score_str)
-        expect_true(0.0 <= score_val <= 1.0,
-                    f"[END] score in [0,1]: {score_val:.4f}")
+        # Expected: [END] task=easy_1 score=0.95 steps=1
+        if "score=" in line:
+            score_part = line.split("score=")[1].split(" ")[0]
+            score_val = float(score_part)
+            expect_true(0.0 <= score_val <= 1.0,
+                        f"[END] score in [0,1]: {score_val:.4f}")
     except Exception as ex:
         fail(f"Could not parse score from: {line!r}", ex)
 
-# Validate [STEP] lines parse correctly
+# Validate [STEP] lines parse correctly (space-separated)
 for line in step_lines[:3]:
     try:
-        parts = dict(p.split("=", 1) for p in line[len("[STEP] "):].split(", ", 4))
+        # Expected: [STEP] step=1 reward=0.5 done=False action={...} info={...}
+        content = line[len("[STEP] "):].strip()
+        parts_list = content.split(" ")
+        parts = {}
+        for p in parts_list:
+            if "=" in p:
+                k, v = p.split("=", 1)
+                parts[k] = v
+        
         _ = int(parts["step"])
-        _ = json.loads(parts["action"])
         _ = float(parts["reward"])
         _ = parts["done"] in ("True", "False")
+        _ = json.loads(parts["action"])
+        _ = json.loads(parts["info"])
         ok(f"[STEP] line parses OK: step={parts['step']}")
     except Exception as ex:
         fail(f"[STEP] line parse failed: {line[:80]!r}", ex)

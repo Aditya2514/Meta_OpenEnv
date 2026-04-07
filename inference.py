@@ -429,30 +429,29 @@ def get_action(
 # Structured logging
 # ===========================================================================
 
-def log_start(task_id: str, env_url: str, model: str) -> None:
+def log_start(task_id: str) -> None:
     """Emit the [START] line."""
-    print(f"[START] task={task_id} env_url={env_url} model={model}", flush=True)
+    print(f"[START] task={task_id}", flush=True)
 
 
 def log_step(
-    task_id: str,
     step_num: int,
-    action: Action,
     reward: float,
     done: bool,
+    action: Action,
     info: Dict,
 ) -> None:
     """Emit one [STEP] line."""
     action_json = json.dumps(action.model_dump(), separators=(",", ":"))
     info_json = json.dumps(
-        {k: v for k, v in info.items() if not isinstance(v, float) or True},
+        {k: v for k, v in info.items()},
         separators=(",", ":"),
     )
     print(
-        f"[STEP] task={task_id} step={step_num} "
-        f"action={action_json} "
+        f"[STEP] step={step_num} "
         f"reward={round(reward, 4)} "
         f"done={done} "
+        f"action={action_json} "
         f"info={info_json}",
         flush=True,
     )
@@ -483,11 +482,11 @@ def run_episode_local(
     -------
     float : grader score in [0.0, 1.0]
     """
+    log_start(task_id)
+
     env = AssignmentPlannerEnv(task_id=task_id)
     obs = observation_from_dict(env.reset().model_dump())
     trajectory: List[State] = [env.state()]
-
-    log_start(task_id, env_url, MODEL_NAME)
 
     step_num = 0
     done = False
@@ -499,7 +498,7 @@ def run_episode_local(
         trajectory.append(env.state())
 
         step_num += 1
-        log_step(task_id, step_num, action, reward, done, info)
+        log_step(step_num, reward, done, action, info)
 
     score = grade(task_id, trajectory)
     log_end(task_id, score, step_num)
@@ -523,11 +522,14 @@ def run_episode_http(
     -------
     float : grader score in [0.0, 1.0]
     """
+    log_start(task_id)
+
     # Reset
     try:
         raw_obs_dict = http_reset(task_id)
     except RuntimeError as exc:
         logger.error("Failed to reset via HTTP: %s", exc)
+        log_end(task_id, 0.0, 0)
         raise
 
     obs = observation_from_dict(raw_obs_dict)
@@ -536,8 +538,6 @@ def run_episode_http(
     shadow_env = AssignmentPlannerEnv(task_id=task_id)
     shadow_env.reset()
     trajectory: List[State] = [shadow_env.state()]
-
-    log_start(task_id, env_url, MODEL_NAME)
 
     step_num = 0
     done = False
@@ -563,7 +563,7 @@ def run_episode_http(
         trajectory.append(shadow_env.state())
 
         step_num += 1
-        log_step(task_id, step_num, action, reward, done, info)
+        log_step(step_num, reward, done, action, info)
 
     score = grade(task_id, trajectory)
     log_end(task_id, score, step_num)
@@ -674,18 +674,18 @@ def main() -> None:
         all_scores[task_id] = score
         logger.info("Task %s finished in %.1fs  score=%.4f", task_id, elapsed, score)
 
-    # ── Final summary ────────────────────────────────────────────────────────
+    # ── Final summary (directed to stderr to avoid stdout pollution) ────────
     total_elapsed = time.time() - total_start
-    print("\n" + "=" * 50)
-    print("FINAL SCORES")
-    print("=" * 50)
+    print("\n" + "=" * 50, file=sys.stderr)
+    print("FINAL SCORES", file=sys.stderr)
+    print("=" * 50, file=sys.stderr)
     for tid, sc in all_scores.items():
         bar = "=" * int(sc * 20)
-        print(f"  {tid:<12}  score={sc:.4f}  |{bar:<20}|")
+        print(f"  {tid:<12}  score={sc:.4f}  |{bar:<20}|", file=sys.stderr)
     mean = sum(all_scores.values()) / len(all_scores) if all_scores else 0.0
-    print(f"\n  Mean score  : {mean:.4f}")
-    print(f"  Total time  : {total_elapsed:.1f}s")
-    print("=" * 50)
+    print(f"\n  Mean score  : {mean:.4f}", file=sys.stderr)
+    print(f"  Total time  : {total_elapsed:.1f}s", file=sys.stderr)
+    print("=" * 50, file=sys.stderr)
 
 
 if __name__ == "__main__":
