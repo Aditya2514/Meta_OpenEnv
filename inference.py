@@ -91,7 +91,7 @@ try:
 except ImportError:
     pass
 
-API_BASE_URL: str = os.getenv("API_BASE_URL", "http://apurva-22-meta-openenv.hf.space").rstrip("/")
+API_BASE_URL: str = os.getenv("API_BASE_URL", "https://apurva-22-meta-openenv.hf.space").rstrip("/")
 LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "https://router.huggingface.co/hf-inference/v1")
 MODEL_NAME: str = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
 HF_TOKEN: str = os.getenv("HF_TOKEN")
