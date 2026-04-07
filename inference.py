@@ -1,68 +1,40 @@
-#!/usr/bin/env python3
-"""
-inference.py
-============
-Baseline inference script for the Assignment & Bug-Fix Planner Agent.
-
-Drives an AI agent (via any OpenAI-compatible LLM endpoint) through all
-three task episodes (easy_1, medium_1, hard_1) and prints structured logs
-in the required [START] / [STEP] / [END] format.
-
-Modes
------
-HTTP mode  (default):
-    Talks to the FastAPI server running on HF Spaces (or locally via Docker).
-    Calls POST /reset and POST /step over HTTP.
-
-Local mode (--local flag or USE_LOCAL_ENV=1):
-    Bypasses the HTTP server entirely and uses AssignmentPlannerEnv directly.
-    Useful for debugging without a running server.
-
-Environment variables
----------------------
-API_BASE_URL   : Base URL of the OpenEnv HTTP server
-                 (e.g., "https://your-space.hf.space").
-                 Required for HTTP mode.
-MODEL_NAME     : LLM model identifier
-                 (e.g., "meta-llama/Llama-3.1-8B-Instruct").
-HF_TOKEN       : API key / Hugging Face token for the LLM endpoint.
-USE_LOCAL_ENV  : Set to "1" to skip HTTP and use local Python env.
-
-Usage
------
-# Remote mode (against a running HF Space):
-    export API_BASE_URL="https://your-space.hf.space"
-    export MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
-    export HF_TOKEN="hf_..."
-    python inference.py
-
-# Local mode (no HTTP server needed, uses LLM for decisions):
-    export MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
-    export HF_TOKEN="hf_..."
-    USE_LOCAL_ENV=1 python inference.py
-
-# Fully local (heuristic agent, no LLM, no server — for quick sanity checks):
-    USE_LOCAL_ENV=1 python inference.py --no-llm
-"""
-
 from __future__ import annotations
+
+import sys
+import io
+import logging
+
+# ---------------------------------------------------------------------------
+# Global IO and Logging Initialization
+# Force UTF-8 encoding to prevent PowerShell redirection issues (UTF-16LE)
+# ---------------------------------------------------------------------------
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', write_through=True)
+if hasattr(sys.stderr, 'buffer'):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', write_through=True)
+
+# Clear any existing handlers to prevent duplicate logging or stdout pollution
+for h in logging.root.handlers[:]:
+    logging.root.removeHandler(h)
+
+# Initialize logging to the RECONFIGURED stderr
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    stream=sys.stderr,
+)
+logger = logging.getLogger("inference")
 
 import argparse
 import json
-import logging
 import os
 import re
-import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
-# ---------------------------------------------------------------------------
-# Path bootstrap – so `src.envs.assignment_planner` is importable from
-# wherever the script is run (repo root expected).
-# ---------------------------------------------------------------------------
 _REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
@@ -71,16 +43,6 @@ from src.envs.assignment_planner.environment import AssignmentPlannerEnv
 from src.envs.assignment_planner.graders import grade
 from src.envs.assignment_planner.models import Action, Observation, State
 from src.envs.assignment_planner.task_config import TASK_CONFIGS, list_task_ids, sample_tasks
-
-# ---------------------------------------------------------------------------
-# Logging (structured, prints to stdout for clean HF log capture)
-# ---------------------------------------------------------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    stream=sys.stderr,
-)
-logger = logging.getLogger("inference")
 
 # ---------------------------------------------------------------------------
 # Configuration (from environment variables)
@@ -429,25 +391,23 @@ def get_action(
 # Structured logging
 # ===========================================================================
 
-def log_start(task_id: str, env_url: str, model: str) -> None:
+def log_start(task: str, env: str, model: str) -> None:
     """Emit the mandatory [START] line."""
-    # Use 'assignment-planner' as the default benchmark name if env_url is not set
-    benchmark = "assignment-planner"
-    print(f"[START] task={task_id} env={benchmark} model={model}", flush=True)
+    print(f"[START] task={task} env={env} model={model}", flush=True)
 
 
 def log_step(
-    step_num: int,
+    step: int,
+    action: Action,
     reward: float,
     done: bool,
-    action: Action,
 ) -> None:
     """Emit the mandatory [STEP] line."""
     action_json = json.dumps(action.model_dump(), separators=(",", ":"))
     done_val = str(done).lower()
     # Format according to sample: step, action, reward (2dp), done (lower), error
     print(
-        f"[STEP] step={step_num} action={action_json} "
+        f"[STEP] step={step} action={action_json} "
         f"reward={reward:.2f} done={done_val} error=null",
         flush=True,
     )
@@ -502,7 +462,7 @@ def run_episode_local(
         rewards_list.append(reward)
 
         step_num += 1
-        log_step(step_num, reward, done, action)
+        log_step(step_num, action, reward, done)
 
     score = grade(task_id, trajectory)
     success = score >= 0.1
@@ -528,7 +488,7 @@ def run_episode_http(
     float : grader score in [0.0, 1.0]
     """
 
-    log_start(task_id, env_url, MODEL_NAME)
+    log_start(task_id, os.getenv("BENCHMARK", "assignment-planner"), MODEL_NAME)
 
     # Reset
     try:
@@ -571,7 +531,7 @@ def run_episode_http(
         trajectory.append(shadow_env.state())
 
         step_num += 1
-        log_step(step_num, reward, done, action)
+        log_step(step_num, action, reward, done)
 
     score = grade(task_id, trajectory)
     success = score >= 0.1
