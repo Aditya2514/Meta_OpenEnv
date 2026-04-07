@@ -156,17 +156,19 @@ def get_action(client, task_id: str, obs: Observation, use_llm: bool = True) -> 
 # ===========================================================================
 
 def log_start(task: str, env: str, model: str):
-    print(f"[START] task={task} env={env} model={model}", flush=True)
+    # Use a simpler env string for the validator
+    env_str = "local" if "local" in env.lower() else "openenv"
+    print(f"[START] task={task} env={env_str} model={model}", flush=True)
 
 def log_step(step: int, action: Action, reward: float, done: bool):
     a_json = json.dumps(action.model_dump(), separators=(",", ":"))
     d_str = str(done).lower()
     print(f"[STEP] step={step} action={a_json} reward={reward:.2f} done={d_str} error=null", flush=True)
 
-def log_end(success: bool, steps: int, score: float, rewards: List[float]):
+def log_end(task: str, success: bool, steps: int, score: float, rewards: List[float]):
     success_str = str(success).lower()
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={success_str} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
+    print(f"[END] task={task} success={success_str} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 # ===========================================================================
 # Episode runners
@@ -209,7 +211,7 @@ def run_episode(task_id: str, client, use_llm: bool, use_local: bool) -> float:
 
     score = grade(task_id, trajectory)
     success = score >= 0.1
-    log_end(success, step_num, score, rewards_list)
+    log_end(task_id, success, step_num, score, rewards_list)
     return score
 
 # ===========================================================================
@@ -222,7 +224,9 @@ def main():
     parser.add_argument("--no-llm", action="store_true", default=False)
     args = parser.parse_args()
 
+    # Use the stable baseline tasks for evaluation
     tasks_to_run = ["easy_1", "medium_1", "hard_1"]
+
     client = _build_client() if not args.no_llm else None
 
     for task_id in tasks_to_run:
@@ -232,4 +236,4 @@ def main():
             logger.error(f"Task {task_id} failed: {e}")
 
 if __name__ == "__main__":
-    main()
+    main()
