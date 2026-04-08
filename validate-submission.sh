@@ -15,6 +15,12 @@ from src.envs.assignment_planner.models import Action, Observation, State
 from src.envs.assignment_planner.task_config import list_task_ids
 
 # --- Mandatory Environment Variables ---
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
 HF_TOKEN = os.getenv("HF_TOKEN")
@@ -79,7 +85,7 @@ def run_task(task_id: str, client: OpenAI):
             steps_taken += 1
             rewards.append(reward)
             
-            log_step(step=steps_taken, action=action_str, reward=reward, done=done, error=None)
+            log_step(step=steps_taken, action_str=action_str, reward=reward, done=done, error=None)
             
         score = grade(task_id, trajectory)
         success = score >= 0.1
@@ -87,7 +93,7 @@ def run_task(task_id: str, client: OpenAI):
     except Exception as e:
         score = 0.0
         success = False
-        # Optional: print(f"[DEBUG] Error: {e}", file=sys.stderr)
+        print(f"[DEBUG] Error in run_task: {e}", file=sys.stderr)
     finally:
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
