@@ -25,15 +25,12 @@ WORKDIR /app
 # ── Python dependencies ───────────────────────────────────────────────────────
 # Copy requirements first to exploit Docker layer cache.
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir \
-        fastapi \
-        "uvicorn[standard]" \
-        pydantic \
-        python-dotenv \
-        pyyaml \
-    && pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # ── Application code ──────────────────────────────────────────────────────────
+# Copy the full src/ tree so inference.py can import from src.envs.*
+COPY src/ /app/src/
+
 # Copy the assignment_planner package into /app/assignment_planner so that
 # `from assignment_planner import ...` works without installing the package.
 COPY src/envs/assignment_planner/__init__.py        /app/assignment_planner/__init__.py
@@ -45,6 +42,9 @@ COPY src/envs/assignment_planner/graders.py         /app/assignment_planner/grad
 # Copy the server entry-point and OpenEnv spec
 COPY src/envs/assignment_planner/server/app.py      /app/app.py
 COPY src/envs/assignment_planner/server/openenv.yaml /app/openenv.yaml
+
+# Copy the inference script
+COPY inference.py /app/inference.py
 
 # ── Environment variables ─────────────────────────────────────────────────────
 # PORT and DEFAULT_TASK can be overridden at `docker run` time:
