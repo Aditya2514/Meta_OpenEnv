@@ -155,20 +155,17 @@ def get_action(client, task_id: str, obs: Observation, use_llm: bool = True) -> 
 # STRUCTURED LOGGING (The Fix for Phase 2)
 # ===========================================================================
 
-def log_start(task: str, env: str, model: str):
-    # Use a simpler env string for the validator
-    env_str = "local" if "local" in env.lower() else "openenv"
-    print(f"[START] task={task} env={env_str} model={model}", flush=True)
+def log_start(task: str, env: str, model: str) -> None:
+    print(f"[START] task={task} env={env} model={model}", flush=True)
 
-def log_step(step: int, action: Action, reward: float, done: bool):
-    a_json = json.dumps(action.model_dump(), separators=(",", ":"))
-    d_str = str(done).lower()
-    print(f"[STEP] step={step} action={a_json} reward={reward:.2f} done={d_str} error=null", flush=True)
+def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str] = None) -> None:
+    error_val = error if error else "null"
+    done_val = str(done).lower()
+    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}", flush=True)
 
-def log_end(task: str, success: bool, steps: int, score: float, rewards: List[float]):
-    success_str = str(success).lower()
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] task={task} success={success_str} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 # ===========================================================================
 # Episode runners
@@ -207,11 +204,13 @@ def run_episode(task_id: str, client, use_llm: bool, use_local: bool) -> float:
         trajectory.append(shadow_env.state())
         rewards_list.append(reward)
         step_num += 1
-        log_step(step_num, action, reward, done)
+        # Convert Action object to string for the log, matching the sample
+        action_str = f'work(task={action.task_id}, hours={action.hours})'
+        log_step(step_num, action_str, reward, done)
 
     score = grade(task_id, trajectory)
     success = score >= 0.1
-    log_end(task_id, success, step_num, score, rewards_list)
+    log_end(success, step_num, score, rewards_list)
     return score
 
 # ===========================================================================
@@ -236,4 +235,4 @@ def main():
             logger.error(f"Task {task_id} failed: {e}")
 
 if __name__ == "__main__":
-    main()
+    main()
