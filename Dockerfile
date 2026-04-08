@@ -16,7 +16,7 @@ FROM python:3.11-slim
 # No native extensions needed; keep the image lean.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        curl \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Working directory ─────────────────────────────────────────────────────────
