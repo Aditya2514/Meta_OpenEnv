@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent-blue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="accent-purple" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Grid overlay -->
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40"/>
+    </pattern>
+    <rect width="1200" height="630" fill="url(#grid)"/>
+  </g>
+
+  <!-- Application Window Frame -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="30" width="1120" height="570" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+
+    <!-- Window Topbar -->
+    <path d="M 40 42 A 12 12 0 0 1 52 30 L 1148 30 A 12 12 0 0 1 1160 42 L 1160 70 L 40 70 Z" fill="#0f172a"/>
+    <line x1="40" y1="70" x2="1160" y2="70" stroke="#334155" stroke-width="1"/>
+
+    <!-- Window Controls -->
+    <circle cx="65" cy="50" r="6" fill="#ef4444"/>
+    <circle cx="85" cy="50" r="6" fill="#f59e0b"/>
+    <circle cx="105" cy="50" r="6" fill="#10b981"/>
+
+    <!-- Address / Title Bar -->
+    <rect x="360" y="40" width="480" height="22" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="600" y="55" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" text-anchor="middle">https://openenv.meta.internal/env/assignment-planner-v0.1.0</text>
+  </g>
+
+  <!-- Sidebar Navigation -->
+  <g>
+    <rect x="40" y="70" width="220" height="530" fill="#090d16" opacity="0.6"/>
+    <line x1="260" y1="70" x2="260" y2="600" stroke="#334155" stroke-width="1"/>
+
+    <!-- Brand -->
+    <text x="65" y="105" fill="#38bdf8" font-family="system-ui, sans-serif" font-weight="700" font-size="16">Meta OpenEnv</text>
+    <text x="65" y="122" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">Task &amp; Burnout Planning</text>
+
+    <!-- Nav Menu items -->
+    <!-- Item 1 (Active) -->
+    <rect x="52" y="145" width="196" height="36" rx="8" fill="#3b82f6" opacity="0.15"/>
+    <rect x="52" y="145" width="4" height="36" rx="2" fill="#3b82f6"/>
+    <text x="80" y="168" fill="#38bdf8" font-family="system-ui, sans-serif" font-weight="600" font-size="13">⚡ Live Dashboard</text>
+
+    <text x="80" y="212" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">📋 Task Suite (15)</text>
+    <text x="80" y="252" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">🤖 Agent Telemetry</text>
+    <text x="80" y="292" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">⚖️ Grader Metrics</text>
+    <text x="80" y="332" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">🌐 REST API Spec</text>
+
+    <line x1="55" y1="365" x2="245" y2="365" stroke="#334155" stroke-width="1"/>
+    <text x="65" y="390" fill="#64748b" font-family="system-ui, sans-serif" font-size="11" font-weight="600">ENVIRONMENT STATUS</text>
+    <text x="65" y="415" fill="#10b981" font-family="system-ui, sans-serif" font-size="12">● Server Online (7860)</text>
+    <text x="65" y="435" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Task Group: hard_1</text>
+    <text x="65" y="455" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Episode Day: 1 / 3</text>
+  </g>
+
+  <!-- Main Content Area -->
+  <g>
+    <!-- Top Stats Header Bar -->
+    <rect x="280" y="85" width="860" height="70" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+
+    <!-- Stat 1 -->
+    <text x="305" y="112" fill="#64748b" font-family="system-ui, sans-serif" font-size="11" font-weight="600">DAILY CAPACITY</text>
+    <text x="305" y="137" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="18" font-weight="700">4.0 h / 6.0 h</text>
+    <rect x="420" y="122" width="80" height="8" rx="4" fill="#334155"/>
+    <rect x="420" y="122" width="53" height="8" rx="4" fill="url(#accent-blue)"/>
+
+    <!-- Stat 2 -->
+    <line x1="535" y1="95" x2="535" y2="145" stroke="#334155" stroke-width="1"/>
+    <text x="555" y="112" fill="#64748b" font-family="system-ui, sans-serif" font-size="11" font-weight="600">BURNOUT RISK INDEX</text>
+    <text x="555" y="137" fill="#10b981" font-family="system-ui, sans-serif" font-size="18" font-weight="700">SAFE (0.12)</text>
+
+    <!-- Stat 3 -->
+    <line x1="720" y1="95" x2="720" y2="145" stroke="#334155" stroke-width="1"/>
+    <text x="740" y="112" fill="#64748b" font-family="system-ui, sans-serif" font-size="11" font-weight="600">CRITICAL BUGS OPEN</text>
+    <text x="740" y="137" fill="#ef4444" font-family="system-ui, sans-serif" font-size="18" font-weight="700">1 Remaining</text>
+
+    <!-- Stat 4 -->
+    <line x1="910" y1="95" x2="910" y2="145" stroke="#334155" stroke-width="1"/>
+    <text x="930" y="112" fill="#64748b" font-family="system-ui, sans-serif" font-size="11" font-weight="600">PREDICTED SCORE</text>
+    <text x="930" y="137" fill="#c084fc" font-family="system-ui, sans-serif" font-size="18" font-weight="700">0.95 / 1.00</text>
+
+    <!-- Task Kanban Board -->
+    <!-- Column 1: Active Tasks -->
+    <rect x="280" y="170" width="560" height="415" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+    <text x="300" y="198" fill="#f8fafc" font-family="system-ui, sans-serif" font-weight="700" font-size="14">📌 Task Workload Queue (hard_1)</text>
+
+    <!-- Task Card 0 (In Progress - High Priority) -->
+    <rect x="300" y="215" width="520" height="95" rx="8" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+    <rect x="315" y="230" width="75" height="20" rx="4" fill="#ef4444" opacity="0.2"/>
+    <text x="352" y="244" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="10" font-weight="700" text-anchor="middle">BUG: HIGH</text>
+
+    <rect x="398" y="230" width="115" height="20" rx="4" fill="#dc2626" opacity="0.3"/>
+    <text x="455" y="244" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="10" font-weight="700" text-anchor="middle">DUE: DAY 1 (URGENT)</text>
+
+    <text x="315" y="272" fill="#f8fafc" font-family="system-ui, sans-serif" font-weight="600" font-size="13">#0 CRITICAL: Memory leak in data pipeline</text>
+    <text x="315" y="294" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Est: 4.0h | Remaining: 0.0h | Status: </text>
+    <text x="500" y="294" fill="#10b981" font-family="system-ui, sans-serif" font-size="11" font-weight="700">COMPLETED ✓</text>
+
+    <!-- Task Card 1 (High Priority Bug) -->
+    <rect x="300" y="320" width="520" height="95" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+    <rect x="315" y="335" width="75" height="20" rx="4" fill="#ef4444" opacity="0.2"/>
+    <text x="352" y="349" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="10" font-weight="700" text-anchor="middle">BUG: HIGH</text>
+
+    <rect x="398" y="335" width="95" height="20" rx="4" fill="#f59e0b" opacity="0.2"/>
+    <text x="445" y="349" fill="#fcd34d" font-family="system-ui, sans-serif" font-size="10" font-weight="700" text-anchor="middle">DUE: DAY 2</text>
+
+    <text x="315" y="377" fill="#f8fafc" font-family="system-ui, sans-serif" font-weight="600" font-size="13">#1 CRITICAL: Race condition in websocket handler</text>
+    <text x="315" y="399" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Est: 4.0h | Remaining: 4.0h | Status: </text>
+    <text x="500" y="399" fill="#60a5fa" font-family="system-ui, sans-serif" font-size="11" font-weight="700">IN PROGRESS ⚡</text>
+
+    <!-- Task Card 2 (Feature) -->
+    <rect x="300" y="425" width="520" height="95" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <rect x="315" y="440" width="75" height="20" rx="4" fill="#3b82f6" opacity="0.2"/>
+    <text x="352" y="454" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="10" font-weight="700" text-anchor="middle">FEATURE</text>
+
+    <rect x="398" y="440" width="85" height="20" rx="4" fill="#334155"/>
+    <text x="440" y="454" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10" font-weight="700" text-anchor="middle">DUE: DAY 3</text>
+
+    <text x="315" y="482" fill="#f8fafc" font-family="system-ui, sans-serif" font-weight="600" font-size="13">#3 Migrate legacy endpoints to REST v2</text>
+    <text x="315" y="504" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Est: 7.0h | Remaining: 7.0h | Status: NOT STARTED</text>
+
+    <text x="300" y="555" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">+ 2 more lower priority tasks in queue...</text>
+
+    <!-- Right Column: Agent Execution Panel -->
+    <rect x="855" y="170" width="285" height="415" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+    <text x="875" y="198" fill="#f8fafc" font-family="system-ui, sans-serif" font-weight="700" font-size="14">🤖 Agent Action Stream</text>
+
+    <!-- Code/JSON Box -->
+    <rect x="875" y="215" width="245" height="240" rx="8" fill="#090d16" stroke="#1e293b" stroke-width="1"/>
+    <text x="890" y="238" fill="#64748b" font-family="monospace" font-size="11">// Last Action Sent (Step 1)</text>
+    <text x="890" y="260" fill="#f8fafc" font-family="monospace" font-size="11">{</text>
+    <text x="905" y="280" fill="#38bdf8" font-family="monospace" font-size="11">"task_id"</text>
+    <text x="965" y="280" fill="#f8fafc" font-family="monospace" font-size="11">: </text>
+    <text x="980" y="280" fill="#f59e0b" font-family="monospace" font-size="11">0</text>
+    <text x="988" y="280" fill="#f8fafc" font-family="monospace" font-size="11">,</text>
+
+    <text x="905" y="300" fill="#38bdf8" font-family="monospace" font-size="11">"hours"</text>
+    <text x="955" y="300" fill="#f8fafc" font-family="monospace" font-size="11">: </text>
+    <text x="970" y="300" fill="#f59e0b" font-family="monospace" font-size="11">4.0</text>
+    <text x="995" y="300" fill="#f8fafc" font-family="monospace" font-size="11">,</text>
+
+    <text x="905" y="320" fill="#38bdf8" font-family="monospace" font-size="11">"ask_for_help"</text>
+    <text x="1005" y="320" fill="#f8fafc" font-family="monospace" font-size="11">: </text>
+    <text x="1020" y="320" fill="#ef4444" font-family="monospace" font-size="11">true</text>
+
+    <text x="890" y="340" fill="#f8fafc" font-family="monospace" font-size="11">}</text>
+
+    <text x="890" y="370" fill="#64748b" font-family="monospace" font-size="11">// Reward Response</text>
+    <text x="890" y="392" fill="#10b981" font-family="monospace" font-size="11">reward : +82.6214</text>
+    <text x="890" y="412" fill="#38bdf8" font-family="monospace" font-size="11">done   : false</text>
+    <text x="890" y="432" fill="#c084fc" font-family="monospace" font-size="11">mentor : "Assisted (+0.2)"</text>
+
+    <!-- Strategy Pill -->
+    <rect x="875" y="470" width="245" height="50" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="890" y="490" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11" font-weight="600">POLICY HEURISTIC</text>
+    <text x="890" y="508" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="11">Prioritise High-Severity Bugs &amp; Mentor</text>
+
+    <rect x="875" y="530" width="245" height="35" rx="8" fill="url(#accent-blue)"/>
+    <text x="997" y="552" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="700" font-size="12" text-anchor="middle">Step Environment →</text>
+  </g>
+</svg>
