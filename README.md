@@ -17,7 +17,7 @@ pinned: false
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?style=for-the-badge&logo=fastapi)](src/envs/assignment_planner/server/app.py)
 [![Hugging Face Spaces](https://img.shields.io/badge/Deploy-HF%20Spaces-FFD21E?style=for-the-badge&logo=huggingface)](Dockerfile)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](Dockerfile)
-[![Tests](https://img.shields.io/badge/Tests-110%2F110%20Passed-10b981?style=for-the-badge&logo=github-actions)](full_test_suite.py)
+[![Tests](https://github.com/Aditya2514/Meta_OpenEnv/actions/workflows/tests.yml/badge.svg)](https://github.com/Aditya2514/Meta_OpenEnv/actions/workflows/tests.yml)
 
 ---
 
